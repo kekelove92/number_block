@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Numberblocks Magic Lab - Learn English & Numbers with Fun!</title>
+  <meta name="description" content="Interactive Numberblocks-inspired web game for kids to learn English numbers, visual addition, and subtraction through living character blocks.">
+  
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Outfit:wght@500;700;800;900&display=swap" rel="stylesheet">
+  
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div id="app-container">
+    <!-- Top Header & Navigation -->
+    <header class="top-nav">
+      <div class="logo-group">
+        <div class="logo-icon">
+          <div class="mini-block red-block"><span>1</span></div>
+          <div class="mini-block orange-block"><span>2</span></div>
+          <div class="mini-block yellow-block"><span>3</span></div>
+        </div>
+        <div class="logo-text">
+          <h1>Numberblocks</h1>
+          <span class="sub-logo">Magic Lab</span>
+        </div>
+      </div>
+
+      <!-- Lessons Mode Toggle Button -->
+      <button id="open-lessons-btn" class="lesson-mode-btn" title="Mở Bản Đồ 10 Bài Học Toán Lớp 1">
+        <span class="btn-icon">📚</span>
+        <span class="btn-text">Bản Đồ Bài Học</span>
+        <span id="lesson-star-badge" class="star-badge">⭐ 0/30</span>
+      </button>
+
+      <!-- Controls & Utilities -->
+      <div class="controls-group">
+        <div class="tool-switch">
+          <button id="tool-drag" class="tool-btn active" title="Move & Merge (Drag blocks together)">
+            <span class="tool-icon">🖐️</span>
+            <span class="tool-label">Move</span>
+          </button>
+          <button id="tool-slice" class="tool-btn" title="Split Blocks (Tap to slice)">
+            <span class="tool-icon">✂️</span>
+            <span class="tool-label">Split</span>
+          </button>
+          <button id="tool-count" class="tool-btn" title="Count Blocks (Tap cubes to count)">
+            <span class="tool-icon">🔢</span>
+            <span class="tool-label">Count</span>
+          </button>
+        </div>
+
+        <button id="sound-toggle-btn" class="icon-btn" title="Toggle Sound">🔊</button>
+        <button id="clear-board-btn" class="icon-btn danger" title="Clear Playground">🗑️</button>
+      </div>
+    </header>
+
+    <!-- Main Playground Area -->
+    <main id="playground" class="playground">
+      <!-- Background Ambient Grid & Particles Canvas -->
+      <canvas id="fx-canvas"></canvas>
+
+      <!-- Centered Interactive Quest & Mission HUD (In Child's Focal Zone) -->
+      <div id="mission-card" class="quest-hud">
+        <div class="quest-target-avatar">
+          <div id="quest-target-cube" class="target-cube" style="--target-color: #ffcc00;">
+            <span id="quest-target-num">3</span>
+          </div>
+        </div>
+        <div class="quest-info">
+          <div class="quest-tag-row">
+            <span id="quest-badge-label" class="quest-badge">✨ NHIỆM VỤ</span>
+            <button id="speak-mission-btn" class="quest-voice-btn" title="Nghe lại nhiệm vụ">🔊</button>
+          </div>
+          <div id="mission-prompt" class="quest-prompt">Make number <strong>3</strong>!</div>
+        </div>
+        <button id="next-mission-btn" class="quest-dice-btn" title="Đổi Nhiệm Vụ Khác">
+          <span>🎲</span>
+        </button>
+      </div>
+
+      <!-- Welcome / Instruction Overlay (Subtle floating tip) -->
+      <div id="floating-guide" class="floating-guide">
+        <span>💡 Kéo các khối lại gần nhau để gộp cộng! Nhấp đúp để tách trừ!</span>
+        <button id="close-guide-btn">✕</button>
+      </div>
+
+      <!-- Interactive Blocks Container -->
+      <div id="blocks-layer" class="blocks-layer"></div>
+
+      <!-- Trash drop area for dragging to delete -->
+      <div id="trash-zone" class="trash-zone">
+        <div class="trash-icon">🗑️</div>
+        <span>Drop here to remove</span>
+      </div>
+
+      <!-- Active Lesson Banner (Hidden by default, shown during Lesson Mode) -->
+      <div id="lesson-banner" class="lesson-banner hidden">
+        <div class="lesson-banner-header">
+          <span class="lesson-badge">📖 BÀI HỌC <span id="current-lesson-num">1</span></span>
+          <h2 id="current-lesson-title">Bậc Thang Cộng 1</h2>
+          <button id="exit-lesson-btn" class="close-lesson-btn" title="Thoát chế độ bài học">✕ Thoát</button>
+        </div>
+        <div class="lesson-banner-body">
+          <p id="current-lesson-prompt">Hãy kéo 1 bạn <strong>One</strong> vào 1 bạn <strong>One</strong> để tạo thành bạn <strong>Two</strong> nhé!</p>
+          <div class="lesson-progress-box">
+            <span id="lesson-task-status">Tiến độ: 0/1</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Floating Speech Bubble for character speaking -->
+      <div id="speech-bubble" class="speech-bubble hidden">
+        <span id="speech-text">Hello! I am One!</span>
+      </div>
+    </main>
+
+    <!-- Modal: Bản Đồ 10 Bài Học (Lesson Roadmap Modal) -->
+    <div id="lesson-modal" class="modal-overlay hidden">
+      <div class="modal-card lesson-modal-card">
+        <div class="modal-header">
+          <div class="modal-title-group">
+            <span class="modal-icon">🗺️</span>
+            <div>
+              <h2>Bản Đồ Bài Học Toán Lớp 1</h2>
+              <span class="modal-subtitle">Chương trình chuẩn Numberblocks BBC (Cộng & Trừ trong phạm vi 10)</span>
+            </div>
+          </div>
+          <button id="close-lessons-modal-btn" class="modal-close-btn">✕</button>
+        </div>
+
+        <div class="modal-body">
+          <div class="lessons-summary-bar">
+            <span>Tổng sao đã đạt:</span>
+            <div class="stars-total"><span id="modal-total-stars">0</span>/30 ⭐</div>
+          </div>
+          <div id="lessons-grid" class="lessons-grid">
+            <!-- 10 Lesson cards will be populated dynamically by JavaScript -->
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal: Chúc Mừng Hoàn Thành Bài Học (Lesson Victory Modal) -->
+    <div id="lesson-victory-modal" class="modal-overlay hidden">
+      <div class="modal-card victory-card">
+        <div class="victory-header">
+          <div class="victory-crown">👑</div>
+          <h2>XUẤT SẮC QUÁ!</h2>
+          <p id="victory-lesson-title">Bạn đã hoàn thành Bài 1!</p>
+        </div>
+        <div class="victory-stars">
+          <span class="star-pop" style="animation-delay: 0.1s;">⭐</span>
+          <span class="star-pop" style="animation-delay: 0.3s;">⭐</span>
+          <span class="star-pop" style="animation-delay: 0.5s;">⭐</span>
+        </div>
+        <p id="victory-message" class="victory-message">Bé đã nắm vững quy tắc cộng thêm 1 rồi đấy!</p>
+        <div class="victory-actions">
+          <button id="next-lesson-btn" class="primary-btn pulse-btn">Bài Tiếp Theo ➜</button>
+          <button id="replay-lesson-btn" class="secondary-btn">Học Lại Bài Này 🔄</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Bottom Spawner Bar -->
+    <footer class="spawner-bar">
+      <div class="spawner-label">
+        <span>Tap to summon blocks:</span>
+      </div>
+      <div class="spawner-track">
+        <button class="spawn-btn" data-number="1" style="--block-color: #ff3344;">
+          <div class="btn-cube">1</div>
+          <span class="btn-name">One</span>
+        </button>
+        <button class="spawn-btn" data-number="2" style="--block-color: #ff8811;">
+          <div class="btn-cube">2</div>
+          <span class="btn-name">Two</span>
+        </button>
+        <button class="spawn-btn" data-number="3" style="--block-color: #ffcc00;">
+          <div class="btn-cube">3</div>
+          <span class="btn-name">Three</span>
+        </button>
+        <button class="spawn-btn" data-number="4" style="--block-color: #22cc55;">
+          <div class="btn-cube">4</div>
+          <span class="btn-name">Four</span>
+        </button>
+        <button class="spawn-btn" data-number="5" style="--block-color: #0099ff;">
+          <div class="btn-cube">5</div>
+          <span class="btn-name">Five</span>
+        </button>
+        <button class="spawn-btn" data-number="6" style="--block-color: #7733cc;">
+          <div class="btn-cube">6</div>
+          <span class="btn-name">Six</span>
+        </button>
+        <button class="spawn-btn" data-number="7" style="--block-color: #ff2277;">
+          <div class="btn-cube rainbow-cube">7</div>
+          <span class="btn-name">Seven</span>
+        </button>
+        <button class="spawn-btn" data-number="8" style="--block-color: #ee2288;">
+          <div class="btn-cube">8</div>
+          <span class="btn-name">Eight</span>
+        </button>
+        <button class="spawn-btn" data-number="9" style="--block-color: #88bbdd;">
+          <div class="btn-cube">9</div>
+          <span class="btn-name">Nine</span>
+        </button>
+        <button class="spawn-btn" data-number="10" style="--block-color: #ffffff;">
+          <div class="btn-cube ten-cube">10</div>
+          <span class="btn-name">Ten</span>
+        </button>
+      </div>
+    </footer>
+  </div>
+
+  <!-- Audio Synthesis & Logic scripts -->
+  <script src="audio.js"></script>
+  <script src="numberblocks.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
